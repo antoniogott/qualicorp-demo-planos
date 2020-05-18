@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html hl="pt-BR">
+
+<head>
+    <title>Qualicorp</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body>
+
+    <div id="app" class="container-fluid p-3">
+
+        <h1>Planos de saúde</h1>
+
+        <form class="mt-4" v-on:submit.prevent="buscarProfissoes">
+
+            <div class="row">
+
+                <div class="col-12 col-md-auto">
+                    <div class="form-group">
+                        <label for="in_dtnasc">Data de nascimento:</label>
+                        <input id="in_dtnasc" type="date" v-model.date="datanascimento" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-auto">
+                    <div class="form-group">
+                        <label for="sel_estado">Estado:</label>
+                        <select id="sel_estado" v-model="estado" class="form-control" required>
+                            <option v-for="estado in estados">{{ estado }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="form-group">
+                        <label for="in_cidade">Cidade:</label>
+                        <input id="in_cidade" type="text" v-model="cidade" class="form-control" required>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="d-flex align-items-center">
+                <button type="submit" class="btn btn-primary">Buscar profissões</button>
+                <div id="spinnerProfissoes" class="spinner-border ml-4 collapse"></div>
+            </div>
+
+        </form>
+
+        <form class="mt-4" v-on:submit.prevent="buscarEntidades">
+
+            <div class="row">
+                <div class="col-12 col-md-5 col-lg-3">
+                    <div class="form-group">
+                        <label for="sel_prof">Profissão:</label>
+                        <select id="sel_prof" v-model="profissao" class="form-control" required>
+                            <option v-for="prof in profissoes">{{ prof }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <button type="submit" class="btn btn-primary">Buscar entidades</button>
+                <div id="spinnerEntidades" class="spinner-border ml-4 collapse"></div>
+            </div>
+
+        </form>
+
+        <form class="mt-4" v-on:submit.prevent="buscarPlanos">
+
+            <div class="row">
+                <div class="col-12 col-md-5 col-lg-3">
+                    <div class="form-group">
+                        <label for="sel_entidades">Entidade de classe:</label>
+                        <select id="sel_entidades" v-model="entidade" class="form-control" required>
+                            <option v-for="entidade in entidades">{{ entidade }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <button type="submit" class="btn btn-primary">Buscar planos</button>
+                <div id="spinnerPlanos" class="spinner-border ml-4 collapse"></div>
+            </div>
+
+        </form>
+
+        <h2 class="mt-4">Planos:</h2>
+
+        <div v-for="plano in planos" class="card p-2 mb-2">
+            <span class="text-small text-secondary">ANS: {{ plano.codigo_ans }}</span>
+            <div class="row align-items-baseline">
+                <div class="col-12 col-md-auto mr-md-n3">
+                    <h5 class="card-title">{{ plano.plano }}</h5>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <h6 class="card-subtitle mb-2 text-info">{{ plano.operadora }}</h6>
+                </div>
+            </div>
+
+            <div class="row align-items-baseline">
+                <div class="col-12 col-md-auto">
+                    <span><b>Segmentação:</b> {{ plano.segmentacao }}</span>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <span><b>Preço:</b> {{ currencyFormatter.format(plano.precos.total) }}</span>
+                </div>
+                <div v-if="plano.nivel" class="col-12 col-md-auto">
+                    <span><b>Nível:</b> {{ plano.nivel }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- <table class="table table-sm table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Cód. ANS</th>
+                    <th scope="col">Operadora</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Segmentação</th>
+                    <th scope="col">Preço</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="plano in planos">
+                    <td>{{ plano.codigo_ans }}</td>
+                    <td>
+                        {{ plano.operadora }}
+                    </td>
+                    <td>{{ plano.plano }}</td>
+                    <td>{{ plano.segmentacao }}</td>
+                    <td>{{ plano.precos.total }}</td>
+                </tr>
+            </tbody>
+        </table> -->
+
+    </div>
+
+
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                estados: ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"],
+                estado: "",
+                cidade: "",
+                profissoes: [],
+                profissao: "",
+                entidades: [],
+                entidade: "",
+                datanascimento: "",
+                planos: [],
+                currencyFormatter: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+            },
+            methods: {
+                buscarProfissoes: function () {
+                    $("#spinnerProfissoes").show();
+                    const qs = new URLSearchParams({
+                        estado: app.estado,
+                        cidade: app.cidade
+                    });
+                    fetch(`/profissoes?${qs.toString()}`)
+                        .then(res => res.json())
+                        .then(profissoes => {
+                            app.profissoes = profissoes.map(p => p.profissao);
+                            $("#spinnerProfissoes").hide();
+                        });
+                },
+                buscarEntidades: function () {
+                    $("#spinnerEntidades").show();
+                    const qs = new URLSearchParams({
+                        estado: app.estado,
+                        cidade: app.cidade,
+                        profissao: app.profissao
+                    });
+                    fetch(`/entidades?${qs.toString()}`)
+                        .then(res => res.json())
+                        .then(entidades => {
+                            app.entidades = entidades.map(e => `${e.NomeFantasia} - ${e.RazaoSocial}`);
+                            $("#spinnerEntidades").hide();
+                        });
+                },
+                buscarPlanos: function () {
+                    $("#spinnerPlanos").show();
+                    const qs = new URLSearchParams({
+                        estado: app.estado,
+                        cidade: app.cidade,
+                        nasc: app.datanascimento,
+                        entidade: app.entidade
+                    });
+                    fetch(`/planos?${qs.toString()}`)
+                        .then(res => res.json())
+                        .then(resPlanos => {
+                            if (resPlanos.message) {
+                                alert(resPlanos.message);
+                            }
+                            else {
+                                app.planos = resPlanos.planos;
+                            }
+                            $("#spinnerPlanos").hide();
+                        });
+                },
+            },
+            watch: {
+                estado: () => app.profissoes = [],
+                cidade: () => app.profissoes = [],
+                profissoes: () => app.profissao = app.profissoes[0],
+                profissao: () => app.entidades = [],
+                entidades: () => app.entidade = app.entidades[0],
+                entidade: () => app.planos = []
+            }
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+</body>
+
+</html>
